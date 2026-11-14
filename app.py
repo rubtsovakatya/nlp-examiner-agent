@@ -393,7 +393,7 @@ def looks_broken(text):
 
     if re.search(r"\*{4,}", text):
         return True
-    
+
     if re.search(r"[\u200b\u200c\u200d\u2060]", text):
         return True
 
@@ -420,6 +420,29 @@ def looks_broken(text):
     if (
         len(words) >= 50
         and len(set(words)) / len(words) < 0.20
+    ):
+        return True
+
+    internal_phrases = [
+        "the last message",
+        "need to follow protocol",
+        "according to instructions",
+        "the user gave",
+        "thus ask",
+        "we need to ask",
+        "the instructions say"
+    ]
+
+    if any(
+        phrase in text.casefold()
+        for phrase in internal_phrases
+    ):
+        return True
+
+    if (
+        len(text) < 80
+        and len(words) < 8
+        and ("…" in text or "..." in text)
     ):
         return True
 
