@@ -78,6 +78,14 @@ SYSTEM_PROMPT = """
 Пиши коротко, зв'язно, українською мовою.
 Не повторюй слова та не генеруй незавершених речень.
 Не вигадуй викликів інструментів або їх результатів.
+
+Якщо студент не продемонстрував знань, прямо зазнач,
+що підтверджених сильних сторін у знанні NLP не виявлено.
+
+Не називай реєстрацію, готовність до іспиту або
+ввічливість сильними сторонами знань.
+
+Оцінюй тільки зміст відповідей на запитання.
 """
 
 TOOLS = {
@@ -383,6 +391,12 @@ def looks_broken(text):
     if len(text) > 4500:
         return True
 
+    if re.search(r"\*{4,}", text):
+        return True
+    
+    if re.search(r"[\u200b\u200c\u200d\u2060]", text):
+        return True
+
     if text.count("...") + text.count("…") >= 7:
         return True
 
@@ -661,6 +675,21 @@ def run_agent(user_text, api_key):
                         f"Іспит завершено. "
                         f"Оцінка: {score}/10. "
                         "Результат збережено."
+                    )
+                exam_now = st.session_state.exam
+
+                if (
+                    exam_now["status"] == "active"
+                    and exam_now["index"] >= 0
+                    and exam_now["answers"] == 0
+                    and not required
+                ):
+                    topic = exam_now["topics"][exam_now["index"]]
+                
+                    return complete_response(
+                        f"Тема {exam_now['index'] + 1}: {topic}.\n\n"
+                        "Поясніть основну ідею цієї теми "
+                        "та наведіть приклад її застосування в NLP."
                     )
 
                 return complete_response(
